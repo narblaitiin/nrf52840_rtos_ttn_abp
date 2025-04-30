@@ -59,7 +59,7 @@ int8_t main(void)
         .tm_wday = 3    // Wednesday
     };
 
-	printk("Geophone Measurement Simulation and Process Information\nBoard: %s\n", CONFIG_BOARD);
+	printk("Geophone Measurement Simulation and Process Information\n");
 	
 	// start the main loop for data simulation and transmission
 	while (1) {
