@@ -37,7 +37,7 @@ The following commands clean build folder, build and flash the sample:
 
 **Command to use**
 ````
-west -t pristine
+west build -t pristine
 
 west build -p always -b mdbt50q_lora_dev applications/nrf52840_rtos_ttn_abp
 
