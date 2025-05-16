@@ -110,15 +110,16 @@ int8_t app_lorawan_init(void)
 		
 		gpio_pin_set_dt(&led_rx, 0);
 
-		if (++retry_count < MAX_JOIN_ATTEMPTS) {
+		if (retry_count > MAX_JOIN_ATTEMPTS) {
 			printk("maximum retries reached. aborting.\n");
             return -1;
 		}
+		retry_count++;
 		k_sleep(K_MSEC(10000));  // Wait before retrying
 
 	} while (ret < 0);
 
-	printk("successfully joined LoRaWAN network using ABP.\n");
+	printk("successfully joined LoRaWAN network using ABP\n");
 	// turn off LEDs to indicate the end of the process
 	gpio_pin_set_dt(&led_tx, 0);
 	gpio_pin_set_dt(&led_rx, 0);
