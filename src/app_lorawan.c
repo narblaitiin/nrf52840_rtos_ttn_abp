@@ -42,11 +42,6 @@ int8_t app_lorawan_init(void)
     uint8_t nwk_skey[] = LORAWAN_NWK_SKEY;
 	uint8_t app_eui[]  = LORAWAN_DEV_EUI;
 
-	char lorawan_dev_addr[4 * 2 + 1] = "";
-	char lorawan_app_skey[16 * 2 + 1] = "";
-	char lorawan_nwk_skey[16 * 2 + 1] = "";
-	char lorawan_app_eui[16 * 2 + 1] = "";
-
 	printk("starting LoRaWAN node initialization\n");
 
     // retrieve the LoRa SX1276 device
@@ -89,11 +84,6 @@ int8_t app_lorawan_init(void)
 	lorawan_register_downlink_callback(&downlink_cb);
 	lorawan_register_dr_changed_callback(lorwan_datarate_changed); 
 
-	hex2bin(lorawan_app_skey, strlen(lorawan_app_skey), app_skey, sizeof(app_skey));
-    hex2bin(lorawan_nwk_skey, strlen(lorawan_nwk_skey), nwk_skey, sizeof(nwk_skey));
-	hex2bin(lorawan_app_eui, strlen(lorawan_app_eui), nwk_skey, sizeof(app_eui));
-    hex2bin(lorawan_dev_addr, strlen(lorawan_dev_addr), (uint8_t *)&dev_addr, sizeof(dev_addr));
-
 	// configuration of lorawan network using ABP
     join_cfg.mode = LORAWAN_ACT_ABP;
     join_cfg.abp.dev_addr = dev_addr;
@@ -101,6 +91,7 @@ int8_t app_lorawan_init(void)
     join_cfg.abp.nwk_skey = nwk_skey;
 	join_cfg.abp.app_eui = app_eui;
 
+	int8_t retry_count = 0;
 	// attempt to join the LoRaWAN network using ABP
 	do {
 		printk("attempting to join LoRaWAN network using ABP\n");
@@ -115,11 +106,19 @@ int8_t app_lorawan_init(void)
 			} else {
 				printk("failed to join network. error: %d\n", ret);
 			}
-		} else {
-			printk("successfully joined LoRaWAN network using ABP.\n");
 		}
+		
+		gpio_pin_set_dt(&led_rx, 0);
+
+		if (++retry_count < MAX_JOIN_ATTEMPTS) {
+			printk("maximum retries reached. aborting.\n");
+            return -1;
+		}
+		k_sleep(K_MSEC(10000));  // Wait before retrying
+
 	} while (ret < 0);
 
+	printk("successfully joined LoRaWAN network using ABP.\n");
 	// turn off LEDs to indicate the end of the process
 	gpio_pin_set_dt(&led_tx, 0);
 	gpio_pin_set_dt(&led_rx, 0);
